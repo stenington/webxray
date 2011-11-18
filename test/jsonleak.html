@@ -3,21 +3,41 @@
 <script src="prototype-1.6.1.js"></script>
 <script src="../static-files/jquery.min.js"></script>
 <script type="text/javascript">
-  $(function(){
-    var got = JSON.stringify({foo: ['a', 'b']});
-    var expected = $("#expected").html();
+  jQuery.noConflict();
+  var objString = "{foo: ['a', 'b']}";
+  eval("var obj = " + objString);
+  var gotPreGoggles = JSON.stringify(obj);
+</script>
+<script src="../static-files/webxray.js"></script>
+<script type="text/javascript">
+  var gotPostGoggles = JSON.stringify(obj);
 
-    var out = $("#stringify");
-    out.append(got);
-    if( got === expected ) {
-      out.css("background-color", "#C6E746");
+  jQuery(document).ready(function(){
+
+    var expected = jQuery("#expected").html();
+
+    function equals(got, expected, output) {
+      output.append(got);
+      if( got == expected ) {
+        output.css("background-color", "#C6E746");
+      } 
+      else {
+        output.css("background-color", "#FFCACA");
+        console.log("Expected: " + expected + ", got: " + got);
+      }
     }
-    else {
-      out.css("background-color", "#FFCACA");
-      console.log("Expected: " + expected + ", got: " + got);
-    }
+
+    jQuery("#obj").append(objString);
+    equals(gotPreGoggles, expected, jQuery("#preGoggles"));
+    equals(gotPostGoggles, expected, jQuery("#postGoggles"));
   });
 </script>
+<style type="text/css">
+  #obj,
+  #expected {
+    background-color: #DDD;
+  }
+</style>
 </head>
 <body>
   <pre>
@@ -29,15 +49,16 @@ up the page using prototype.js.
 
 The goggles override the JSON object internally. This page demonstrates that that doesn't leak!
 
-This --> { foo: ['a', 'b'] }
-Stringifies (with the bug) as --> <span id="expected">{"foo":"[\"a\", \"b\"]"}</span>
-...which you should see here: <span id="stringify"></span>
+This object: <span id="obj"></span>
+Stringifies (with the bug) as: <span id="expected">{"foo":"[\"a\", \"b\"]"}</span>
+...which you should see below here twice, stringified both *before* and *after* loading the goggles.
 
-If the last line is green, the goggles have not changed external JSON.stringify behavior&mdash;there's no leak! 
-Now launch the goggles and hit 'R' to remix. If the remix panel loads, then everything is dandy.
+Before: <span id="preGoggles"></span>
+ After: <span id="postGoggles"></span>
+
+If the before and after are green, the goggles have not changed external JSON.stringify behavior&mdash;there's no leak! 
 
 </pre>
-
 
 </body>
 </html>
